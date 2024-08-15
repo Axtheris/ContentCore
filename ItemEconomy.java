@@ -1,23 +1,24 @@
-package org.Axther.contentCore.itemEconomy;
+package org.Axther.contentCore.Economy;
 
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Arrays;
 
 public class ItemEconomy {
     private final Plugin plugin;
     private final Map<UUID, Integer> balances = new HashMap<>();
     private final Map<UUID, Double> accumulatedInterest = new HashMap<>();
+
     private static final double INTEREST_RATE = 0.01; // 1% interest rate
     private static final int STACK_SIZE = 64;
     private static final int MAX_INTEREST_PER_STACK = 10;
@@ -37,16 +38,17 @@ public class ItemEconomy {
 
     public boolean deposit(Player player, int amount) {
         if (amount <= 0) return false;
-        int currentBalance = getBalance(player);
-        setBalance(player, currentBalance + amount);
+        UUID playerId = player.getUniqueId();
+        balances.put(playerId, getBalance(player) + amount);
         return true;
     }
 
     public boolean withdraw(Player player, int amount) {
         if (amount <= 0) return false;
+        UUID playerId = player.getUniqueId();
         int currentBalance = getBalance(player);
         if (currentBalance < amount) return false;
-        setBalance(player, currentBalance - amount);
+        balances.put(playerId, currentBalance - amount);
         return true;
     }
 
@@ -82,6 +84,8 @@ public class ItemEconomy {
     }
 
     public ItemStack createCheque(int amount) {
+        if (amount <= 0) return null;
+
         ItemStack cheque = new ItemStack(Material.PAPER);
         ItemMeta meta = cheque.getItemMeta();
         if (meta != null) {
@@ -95,7 +99,7 @@ public class ItemEconomy {
     }
 
     public int redeemCheque(ItemStack cheque) {
-        if (cheque.getType() != Material.PAPER) return 0;
+        if (cheque == null || cheque.getType() != Material.PAPER) return 0;
         ItemMeta meta = cheque.getItemMeta();
         if (meta == null) return 0;
         PersistentDataContainer container = meta.getPersistentDataContainer();

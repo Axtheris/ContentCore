@@ -3,7 +3,7 @@ package org.Axther.contentCore;
 import org.Axther.contentCore.commands.IContentCoreCommand;
 import org.Axther.contentCore.commands.ReloadCommand;
 import org.Axther.contentCore.commands.economy.*;
-import org.Axther.contentCore.itemEconomy.ItemEconomy;
+import org.Axther.contentCore.Economy.ItemEconomy;
 import org.Axther.contentCore.listeners.ChequeListener;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,6 +19,7 @@ import java.util.Map;
 
 public final class ContentCore extends JavaPlugin implements CommandExecutor, TabCompleter {
 
+    private static final String PERMISSION_PREFIX = "contentcore.";
     private Map<String, IContentCoreCommand> commands;
     private ItemEconomy itemEconomy;
 
@@ -26,20 +27,16 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
     public void onEnable() {
         getLogger().info("ContentCore is being enabled.");
 
-        // Initialize ItemEconomy
-        itemEconomy = new ItemEconomy(this);
-
-        // Initialize commands
-        initializeCommands();
-
-        // Register the command executor and tab completer
-        registerCommands();
-
-        // Register listeners
-        registerListeners();
-
-        // Schedule interest application task
-        scheduleInterestTask();
+        try {
+            initializeEconomy();
+            initializeCommands();
+            registerCommands();
+            registerListeners();
+            scheduleInterestTask();
+        } catch (Exception e) {
+            getLogger().severe("Failed to enable ContentCore: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         getLogger().info("ContentCore has been successfully enabled!");
     }
@@ -47,6 +44,10 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
     @Override
     public void onDisable() {
         getLogger().info("ContentCore has been disabled!");
+    }
+
+    private void initializeEconomy() {
+        itemEconomy = new ItemEconomy(this);
     }
 
     private void initializeCommands() {
@@ -75,10 +76,14 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
     }
 
     private void scheduleInterestTask() {
-        // Apply interest every hour (20 ticks * 60 seconds * 60 minutes)
         getServer().getScheduler().runTaskTimer(this, () -> {
-            itemEconomy.applyInterest();
-            getLogger().info("Applied interest to all player balances.");
+            try {
+                itemEconomy.applyInterest();
+                getLogger().info("Applied interest to all player balances.");
+            } catch (Exception e) {
+                getLogger().severe("Failed to apply interest: " + e.getMessage());
+                e.printStackTrace();
+            }
         }, 20 * 60 * 60, 20 * 60 * 60);
     }
 
@@ -89,7 +94,7 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
                 String subCommand = args[0].toLowerCase();
                 IContentCoreCommand ccCommand = commands.get(subCommand);
                 if (ccCommand != null) {
-                    if (sender.hasPermission("contentcore." + subCommand)) {
+                    if (sender.hasPermission(PERMISSION_PREFIX + subCommand)) {
                         return ccCommand.execute(sender, command, label, args);
                     } else {
                         sender.sendMessage("You don't have permission to use this command.");
@@ -101,7 +106,7 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
             } else {
                 List<String> availableCommands = new ArrayList<>();
                 for (String cmd : commands.keySet()) {
-                    if (sender.hasPermission("contentcore." + cmd)) {
+                    if (sender.hasPermission(PERMISSION_PREFIX + cmd)) {
                         availableCommands.add(cmd);
                     }
                 }
@@ -118,16 +123,14 @@ public final class ContentCore extends JavaPlugin implements CommandExecutor, Ta
             if (args.length == 1) {
                 List<String> availableCommands = new ArrayList<>();
                 for (String cmd : commands.keySet()) {
-                    if (sender.hasPermission("contentcore." + cmd)) {
-                        if (cmd.startsWith(args[0].toLowerCase())) {
-                            availableCommands.add(cmd);
-                        }
+                    if (sender.hasPermission(PERMISSION_PREFIX + cmd) && cmd.startsWith(args[0].toLowerCase())) {
+                        availableCommands.add(cmd);
                     }
                 }
                 return availableCommands;
             } else if (args.length > 1) {
                 IContentCoreCommand ccCommand = commands.get(args[0].toLowerCase());
-                if (ccCommand != null && sender.hasPermission("contentcore." + args[0].toLowerCase())) {
+                if (ccCommand != null && sender.hasPermission(PERMISSION_PREFIX + args[0].toLowerCase())) {
                     return ccCommand.tabComplete(sender, command, alias, args);
                 }
             }

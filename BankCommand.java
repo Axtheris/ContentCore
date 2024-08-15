@@ -1,7 +1,7 @@
 package org.Axther.contentCore.commands.economy;
 
 import org.Axther.contentCore.ContentCore;
-import org.Axther.contentCore.itemEconomy.ItemEconomy;
+import org.Axther.contentCore.Economy.ItemEconomy;
 import org.Axther.contentCore.commands.IContentCoreCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
