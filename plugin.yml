@@ -1,0 +1,38 @@
+name: ContentCore
+version: '1.1'
+main: org.Axther.contentCore.ContentCore
+api-version: '1.21'
+
+commands:
+  cc:
+    description: Main command for ContentCore
+    usage: /<command> [reload|bank|pay|deposit|withdraw|cheque]
+
+permissions:
+  contentcore.*:
+    description: Gives access to all ContentCore commands
+    children:
+      contentcore.reload: false
+      contentcore.bank: true
+      contentcore.pay: true
+      contentcore.deposit: true
+      contentcore.withdraw: true
+      contentcore.cheque: true
+  contentcore.reload:
+    description: Allows reloading the ContentCore plugin
+    default: op
+  contentcore.bank:
+    description: Allows access to bank balance information
+    default: true
+  contentcore.pay:
+    description: Allows paying diamonds to other players
+    default: true
+  contentcore.deposit:
+    description: Allows depositing diamonds into the bank
+    default: true
+  contentcore.withdraw:
+    description: Allows withdrawing diamonds from the bank
+    default: true
+  contentcore.cheque:
+    description: Allows creating diamond cheques
+    default: true
